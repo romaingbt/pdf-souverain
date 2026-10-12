@@ -31,7 +31,7 @@ Plateforme d'édition PDF 100 % souveraine et auto-hébergée — BentoPDF derri
 
 ## 📌 Contexte &amp; problématique
 
-Le déploiement d'une solution de sécurisation des flux Web (Zero Trust, DLP, mise en conformité RGPD) a bloqué les outils d'édition PDF en ligne utilisés par les collaborateurs — un blocage légitime : ces services copiaient des documents sensibles (contrats, bulletins de paie, RIB, factures) vers des serveurs tiers situés hors de l'Union européenne.
+Le déploiement d'une solution de sécurisation des flux Web (Zero Trust, DLP, mise en conformité RGPD) a bloqué les outils d'édition PDF en ligne utilisés par les collaborateurs — un blocage légitime : ces services copiaient des documents sensibles vers des serveurs tiers situés hors de l'Union européenne.
 
 Deux problèmes émergent alors :
 
