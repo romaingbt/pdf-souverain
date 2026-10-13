@@ -1,0 +1,53 @@
+services:
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
+
+    volumes:
+      - ./configuration.yml:/config/configuration.yml:ro
+      - ./authelia-data:/config/data
+    secrets:
+      - ldap_password
+      - jwt_secret
+      - session_secret
+      - storage_secret
+    environment:
+      # Mot de passe LDAP via secret Docker
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/chemin/dans_le_conteneur
+      # JWT secret
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/chemin/dans_le_conteneur
+      # Session encryption
+      AUTHELIA_SESSION_SECRET_FILE: /run/chemin/dans_le_conteneur
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/chemin/dans_le_conteneur
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authelia.rule=Host(`authelia.domaine.fr`)
+      - traefik.http.routers.authelia.entrypoints=websecure
+      - traefik.http.routers.authelia.tls=true
+      - traefik.http.services.authelia.loadbalancer.server.port=9091
+      - traefik.http.routers.authelia.middlewares=authelia-headers
+      - traefik.http.middlewares.authelia-headers.headers.customrequestheaders.X-Forwarded-Proto=https
+      - traefik.http.middlewares.authelia-headers.headers.customrequestheaders.X-Forwarded-Host=authelia.domaine.fr
+      - traefik.http.middlewares.authelia-headers.headers.customrequestheaders.X-Forwarded-URI=/
+      
+      # Middleware Authelia (forward-auth)
+      - traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://authelia.domaine.fr
+      - traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email
+    networks:
+      - frontend
+secrets:
+  ldap_password:
+    file: /opt/Chemin/du/secret/sur_le_serveur
+  jwt_secret:
+    file: /otp/Chemin/du/secret/sur_le_serveur
+  session_secret:
+    file: /opt/Chemin/du/secret/sur_le_serveur
+  storage_secret:
+    file: /opt/Chemin/du/secret/sur_le_serveur
+
+networks:
+  frontend:
+    external: true

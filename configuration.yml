@@ -1,0 +1,131 @@
+###############################################################################
+# AUTHELIA CONFIGURATION (v4.38+ COMPATIBLE)
+###############################################################################
+
+server:
+  address: tcp://0.0.0.0:9091
+
+log:
+  level: debug
+
+theme: dark 
+
+###############################################################################
+# AUTHENTICATION BACKEND (ACTIVE DIRECTORY)
+###############################################################################
+
+authentication_backend:
+  ldap:
+    implementation: activedirectory
+    address: ldap://datacenter.domaine.fr
+    timeout: 5s
+    start_tls: false
+
+    base_dn: DC=domaine,DC=fr
+
+    attributes:
+      username: sAMAccountName
+      group_name: cn
+      mail: mail
+
+    users_filter: (&(objectClass=user)({username_attribute}={input}))
+
+    groups_filter: (member={dn})
+
+    user: "CN=docker01_svc,OU=Service Accounts,DC=domaine,DC=fr"
+
+totp:
+
+  issuer: authelia
+  period: 30
+  skew: 1
+
+default_2fa_method: totp
+
+identity_validation:
+  elevated_session:
+    require_second_factor: false
+
+###############################################################################
+# SESSION (REQUIRED) 
+###############################################################################
+
+session:
+  name: authelia_session
+#  expiration: 1h
+#  inactivity: 5m
+  remember_me: 7d
+
+  cookies:
+    - domain: domaine.fr
+      authelia_url: https://authelia.domaine.fr
+      same_site: lax
+
+###############################################################################
+# STORAGE (REQUIRED)
+###############################################################################
+
+storage:
+
+  local:
+    path: /config/data/db.sqlite3
+###############################################################################
+# NOTIFIER (REQUIRED)
+###############################################################################
+
+notifier:
+
+  smtp:
+    address: smtp://smtp.relay.domaine.fr:25
+    timeout: 5s
+    sender: "Authelia <authelia@domaine.fr>"
+    identifier: authelia.domaine.fr
+    subject: "[Authelia] {title}"
+    startup_check_address: 'adresse_mail_test@domaine.fr'
+    disable_require_tls: false
+    disable_starttls: false
+    disable_html_emails: false
+    tls:
+      server_name: domaine.fr
+      skip_verify: false
+      minimum_version: 'TLS1.2'
+      maximum_version: 'TLS1.3'
+
+###############################################################################
+# ACCESS CONTROL
+###############################################################################
+
+access_control:
+  default_policy: deny
+
+  rules:
+    - domain: stirlingpdf.domaine.fr
+      policy: one_factor
+
+
+    - domain: bentopdf.domaine.fr
+      policy: one_factor
+
+
+    - domain: traefik.domaine.fr    #Applicatif 
+      policy: two_factor            #Double authentification (TOIP) 
+      subject:                      #Groupe de securite 
+        - group:Authelia-ITTools    #Groupe associe
+
+    - domain: it-tools.domaine.fr
+      policy: two_factor
+      subject:
+        - group:Authelia-ITTools
+
+    - domain: portail.domaine.fr
+      policy: one_factor
+
+
+    - domain: authelia.domaine.fr
+      policy: one_factor
+
+    - domain: sl-pdftools.domaine.fr
+      policy: one_factor
+
+    - domain: bt-pdftools.domaine.fr
+      policy: one_factor
